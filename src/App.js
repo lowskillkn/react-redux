@@ -1,65 +1,76 @@
-import React, { useState, useMemo, useEffect } from "react"
-import axios from "axios"
-import "./styles/App.css"
-import Counter from "./components/Counter"
-import ClassCounter from "./components/ClassCounter"
-// import PostItem from "./components/PostItem"
-import PostList from "./components/PostList"
-import MyButton from "./components/UI/button/MyButton"
-import MyInput from "./components/UI/input/MyInput"
-import PostForm from "./components/PostForm"
-import MySelect from "./components/UI/select/MySelect"
-import PostFilter from "./components/PostFilter"
-import MyModal from "./components/UI/modal/MyModal"
-import { usePosts } from "./hooks/usePosts"
+import './App.css'
+import { useDispatch, useSelector } from 'react-redux'
+import { fetchCustomers } from './asyncActions/customers'
+import {
+  decrementCreator,
+  incrementCreator,
+} from './store/reducers/countReducer'
+import { deleteUser } from './store/reducers/userReducer'
 
 function App() {
-  const [posts, setPosts] = useState([])
-  const [filter, setFilter] = useState({ sort: "", query: "" })
-  const [modal, setModal] = useState(false)
+  const dispatch = useDispatch()
+  const count = useSelector((state) => state.countReducer.count)
+  const users = useSelector((state) => state.userReducer.users)
 
-  const sortedAndSearchedPosts = usePosts(posts, filter.sort, filter.query)
-
-  async function fetchPosts() {
-    const response = await axios.get(
-      "https://jsonplaceholder.typicode.com/posts"
-    )
-    setPosts(response.data)
-  }
-
-  useEffect(() => {
-    fetchPosts()
-  }, [])
-
-  const createPost = (newPost) => {
-    setPosts([...posts, newPost])
-    setModal((prev) => !prev)
-  }
-
-  const removePost = (id) => {
-    setPosts((posts) => {
-      return posts.filter((post) => post.id !== id)
-    })
+  const removeUser = (user) => {
+    dispatch(deleteUser(user.id))
   }
 
   return (
     <div className="App">
-      <MyButton
-        style={{ marginTop: "25px" }}
-        onClick={() => setModal((prev) => !prev)}
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div style={{ fontSize: '3rem' }}>{count}</div>
+        <button
+          style={{ margin: '0px 20px 0px 20px' }}
+          onClick={() => dispatch(incrementCreator())}
+        >
+          ИНКРЕМЕНТ++
+        </button>
+        <button
+          style={{ margin: '0px 20px 0px 20px' }}
+          onClick={() => dispatch(decrementCreator())}
+        >
+          ДЕКРЕМЕНТ--
+        </button>
+        <button
+          style={{ margin: '0px 20px 0px 20px' }}
+          onClick={() => dispatch(fetchCustomers())}
+        >
+          ПОЛУЧИТЬ ПОЛЬЗОВАТЕЛЕЙ
+        </button>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+        }}
       >
-        Создать пользователя
-      </MyButton>
-      <MyModal visible={modal} setVisible={setModal}>
-        <PostForm create={createPost} />
-      </MyModal>
-      <hr style={{ margin: "15px 0" }} />
-      <PostFilter filter={filter} setFilter={setFilter} />
-      <PostList
-        remove={removePost}
-        posts={sortedAndSearchedPosts}
-        title="Посты про фрукты"
-      />
+        {users.map((user) => {
+          return (
+            <div
+              style={{
+                border: '1px solid black',
+                padding: '15px 10px',
+                marginTop: '10px',
+                minWidth: '200px',
+                display: 'flex',
+                justifyContent: 'space-between'
+              }}
+              key={user.id}
+            >
+              {user.name}
+              <button
+                onClick={() => removeUser(user)}
+                style={{ margin: '0px 5px' }}
+              >
+                x
+              </button>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }
